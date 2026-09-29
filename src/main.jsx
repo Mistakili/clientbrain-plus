@@ -20,7 +20,7 @@ function App(){
  const[leads,setLeads]=useState([]);
  const[followups,setFollowups]=useState([]);
  const[activeNav,setActiveNav]=useState("Home");
- const ws=useRef(null),ctx=useRef(null),stream=useRef(null),worklet=useRef(null),sources=useRef([]),playAt=useRef(0),session=useRef(null),pendingTools=useRef([]);
+ const ws=useRef(null),ctx=useRef(null),stream=useRef(null),worklet=useRef(null),sources=useRef([]),playAt=useRef(0),session=useRef(null),pendingTools=useRef([]),leadsRef=useRef([]);
 
  useEffect(()=>()=>disconnect(),[]);
 
@@ -50,22 +50,13 @@ function App(){
  async function tool(call){
   let args={};
   try{args=typeof call.arguments==="string"?JSON.parse(call.arguments||"{}"):(call.arguments||{})}catch{}
-  if(call.name==="create_lead"){
-   const lead={id:crypto.randomUUID(),name:args.name||"Unknown",property_type:args.property_type||"—",location:args.location||"—",budget:args.budget||"—",timeline:args.timeline||"—",notes:args.notes||"",createdAt:new Date().toISOString()};
-   setLeads(x=>[lead,...x]);
-   return{ok:true,lead};
-  }
-  if(call.name==="get_lead"){
-   const query=String(args.name||"").toLowerCase();
-   const lead=leads.find(x=>x.name.toLowerCase()===query)||leads.find(x=>x.name.toLowerCase().includes(query));
-   return lead?{ok:true,lead}:{ok:false,message:"No lead found"};
-  }
-  if(call.name==="create_followup"){
-   const f={id:crypto.randomUUID(),name:args.name,when:args.when,note:args.note||"",createdAt:new Date().toISOString()};
-   setFollowups(x=>[f,...x]);
-   return{ok:true,followup:f};
-  }
-  return{ok:false,message:"Unknown tool"};
+  try{
+   const r=await fetch("/api/crm",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({tool:call.name,arguments:args})});
+   const result=await r.json();
+   if(result.lead)setLeads(x=>[result.lead,...x.filter(y=>y.id!==result.lead.id)]);
+   if(result.followup)setFollowups(x=>[result.followup,...x.filter(y=>y.id!==result.followup.id)]);
+   return result;
+  }catch{return{ok:false,message:"CRM service unavailable"}}
  }
 
  async function connect(){
