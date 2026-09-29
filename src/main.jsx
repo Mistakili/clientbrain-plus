@@ -7,7 +7,8 @@ const SAMPLE_RATE=24000;
 const tools=[
  {type:"function",name:"create_lead",description:"Create a new real-estate lead from details the user gives you. Use this when the user says they have a new client or lead.",parameters:{type:"object",properties:{name:{type:"string"},property_type:{type:"string"},location:{type:"string"},budget:{type:"string"},timeline:{type:"string"},notes:{type:"string"}},required:["name"]}},
  {type:"function",name:"get_lead",description:"Look up a lead by name and return their saved details.",parameters:{type:"object",properties:{name:{type:"string"}},required:["name"]}},
- {type:"function",name:"create_followup",description:"Create a follow-up reminder for a lead.",parameters:{type:"object",properties:{name:{type:"string"},when:{type:"string"},note:{type:"string"}},required:["name","when"]}}
+ {type:"function",name:"create_followup",description:"Create a follow-up reminder for a lead.",parameters:{type:"object",properties:{name:{type:"string"},when:{type:"string"},note:{type:"string"}},required:["name","when"]}},
+ {type:"function",name:"transfer_to_human",description:"Transfer the caller to a human real-estate agent when they explicitly ask for a person or the request needs human assistance. Before calling, tell the caller you are connecting them. Provide a short reason and summary.",parameters:{type:"object",properties:{reason:{type:"string"},summary:{type:"string"}},required:["reason","summary"]},execution_mode:"hold",timeout_seconds:60}
 ];
 
 function b64(buf){const bytes=new Uint8Array(buf);let s="";for(let i=0;i<bytes.length;i+=0x8000)s+=String.fromCharCode(...bytes.subarray(i,i+0x8000));return btoa(s)}
@@ -77,6 +78,7 @@ function App(){
    const result=await r.json();
    if(result.lead)setLeads(x=>[result.lead,...x.filter(y=>y.id!==result.lead.id)]);
    if(result.followup)setFollowups(x=>[result.followup,...x.filter(y=>y.id!==result.followup.id)]);
+   if(call.name==="transfer_to_human")add("agent",result.message||"I’ll connect you with a human agent now.");
    return result;
   }catch{return{ok:false,message:"CRM service unavailable"}}
  }
@@ -99,7 +101,7 @@ function App(){
    worklet.current.port.onmessage=e=>{if(socket.readyState===1&&session.current)socket.send(JSON.stringify({type:"input.audio",audio:b64(e.data)}))};
    socket.onopen=()=>{
     socket.send(JSON.stringify({type:"session.update",session:{
-     system_prompt:"You are ClientBrain Plus, a concise voice CRM assistant for real-estate agents. Help the realtor capture and manage leads by conversation. Ask only for information that is missing. When the user gives you a new lead, use create_lead. When asked about a saved lead, use get_lead. When asked to remember a follow-up, use create_followup. Never invent saved data. Keep spoken replies short and natural.",
+     system_prompt:"You are ClientBrain Plus, a concise voice CRM assistant for real-estate agents. Help the realtor capture and manage leads by conversation. Ask only for information that is missing. When the user gives you a new lead, use create_lead. When asked about a saved lead, use get_lead. When asked to remember a follow-up, use create_followup. If the caller explicitly asks for a human or the request needs human assistance, tell them you will connect them and use transfer_to_human with a short reason and summary. Never invent saved data or claim a transfer succeeded unless the tool confirms it. Keep spoken replies short and natural.",
      greeting:"Hi — I'm ClientBrain. Tell me about a lead or ask me about someone you've saved.",
      output:{voice:"ivy"},tools,input:{turn_detection:{vad_threshold:.5,min_silence:600,max_silence:1500,interrupt_response:true}}
     }}));
