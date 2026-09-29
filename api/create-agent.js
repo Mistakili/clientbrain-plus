@@ -3,7 +3,8 @@ export default async function handler(req,res){
   const key=process.env.ASSEMBLYAI_API_KEY;
   if(!key)return res.status(500).json({error:"ASSEMBLYAI_API_KEY is not configured"});
   const origin=req.headers.origin||req.headers.referer||"";
-  const base=origin.startsWith("http")?new URL(origin).origin:"";
+  const forwarded=req.headers["x-forwarded-proto"]&&req.headers["x-forwarded-host"]?`${req.headers["x-forwarded-proto"]}://${req.headers["x-forwarded-host"]}`:"";
+  const base=origin.startsWith("http")?new URL(origin).origin:(forwarded||"");
   if(!base)return res.status(400).json({error:"Could not determine app origin"});
   const secret=process.env.CLIENTBRAIN_TOOL_SECRET;
   const toolUrl=base+"/api/crm"+(secret?"?tool_key="+encodeURIComponent(secret):"");
