@@ -74,7 +74,8 @@ function App(){
   let args={};
   try{args=typeof call.arguments==="string"?JSON.parse(call.arguments||"{}"):(call.arguments||{})}catch{}
   try{
-   const r=await fetch("/api/crm",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({tool:call.name,arguments:args})});
+   const endpoint=call.name==="transfer_to_human"?"/api/transfer":"/api/crm";
+   const r=await fetch(endpoint,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({tool:call.name,arguments:args,...args})});
    const result=await r.json();
    if(result.lead)setLeads(x=>[result.lead,...x.filter(y=>y.id!==result.lead.id)]);
    if(result.followup)setFollowups(x=>[result.followup,...x.filter(y=>y.id!==result.followup.id)]);
