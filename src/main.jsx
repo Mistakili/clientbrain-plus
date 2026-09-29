@@ -24,6 +24,28 @@ function App(){
 
  useEffect(()=>()=>disconnect(),[]);
 
+ useEffect(()=>{
+  leadsRef.current=leads;
+ },[leads]);
+
+ useEffect(()=>{
+  let alive=true;
+  const sync=async()=>{
+   try{
+    const r=await fetch("/api/crm");
+    if(!r.ok)return;
+    const d=await r.json();
+    if(alive){
+     setLeads(d.leads||[]);
+     setFollowups(d.followups||[]);
+    }
+   }catch{}
+  };
+  sync();
+  const id=setInterval(sync,2500);
+  return()=>{alive=false;clearInterval(id)};
+ },[]);
+
  const add=(role,text,extra={})=>setMessages(m=>[...m,{id:crypto.randomUUID(),role,text,...extra}]);
 
  function flush(){
@@ -125,7 +147,7 @@ function App(){
   <aside className="sidebar">
    <div className="brand"><div className="logo">CB</div><div><strong>ClientBrain <em>Plus</em></strong><small>Voice-first CRM</small></div></div>
    <nav>{navItems.map(([name,icon])=><button key={name} className={activeNav===name?"active":""} onClick={()=>setActiveNav(name)}><i>{icon}</i><span>{name}</span>{name==="Leads"&&leads.length>0&&<b>{leads.length}</b>}{name==="Follow-ups"&&followups.length>0&&<b>{followups.length}</b>}</button>)}</nav>
-   <div className="agentCard"><span className="liveDot"/><div><strong>Voice Agent</strong><small>{connected?"Live":"Offline"}</small></div><small>Powered by AssemblyAI</small></div>
+   <div className="agentCard"><span className="liveDot"/><div><strong>Voice Agent</strong><small>{connected?"Live":"Ready"}</small></div><small>Powered by AssemblyAI</small></div>
    <div className="userCard"><div className="userAvatar">A</div><div><strong>Akin Ajobo</strong><small>Free Plan</small></div></div>
   </aside>
 
@@ -133,7 +155,7 @@ function App(){
    <header className="topbar">
     <div className="mobileBrand"><div className="logo">CB</div><strong>ClientBrain <em>Plus</em></strong></div>
     <div className="pageTitle"><span className="eyebrow">VOICE WORKSPACE</span><h1>{activeNav}</h1></div>
-    <div className={"livePill "+(connected?"on":"")}><span/> {connected?"LIVE":"OFFLINE"}</div>
+    <div className={"livePill "+(connected?"on":"")}><span/> {connected?"LIVE":"READY"}</div>
    </header>
 
    <section className="voiceCard">
