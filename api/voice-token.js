@@ -2,7 +2,7 @@ export default async function handler(req,res){
   if(req.method!=="GET"){return res.status(405).json({error:"Method not allowed"});}
   const origin=req.headers.origin||"";
   const allowed=(process.env.ALLOWED_ORIGIN||"").split(",").map(s=>s.trim()).filter(Boolean);
-  const isLocal=/^https?:\/\/(localhost|127\\.0\\.0\\.1)(:\\d+)?$/.test(origin);
+  const isLocal=origin.startsWith("http://localhost:")||origin.startsWith("http://127.0.0.1:");
   if(allowed.length && !allowed.includes(origin) && !isLocal){return res.status(403).json({error:"Forbidden"});}
   const key=process.env.ASSEMBLYAI_API_KEY;
   if(!key){return res.status(500).json({error:"ASSEMBLYAI_API_KEY is not configured"});}
