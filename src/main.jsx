@@ -20,6 +20,7 @@ function App(){
  const[messages,setMessages]=useState([]);
  const[leads,setLeads]=useState([]);
  const[followups,setFollowups]=useState([]);
+ const[handoffs,setHandoffs]=useState([]);
  const[activeNav,setActiveNav]=useState("Home");
  const ws=useRef(null),ctx=useRef(null),stream=useRef(null),worklet=useRef(null),sources=useRef([]),playAt=useRef(0),session=useRef(null),pendingTools=useRef([]),leadsRef=useRef([]);
 
@@ -39,6 +40,8 @@ function App(){
     if(alive){
      setLeads(d.leads||[]);
      setFollowups(d.followups||[]);
+     const hr=await fetch("/api/transfer");
+     if(hr.ok){const hd=await hr.json();setHandoffs(hd.handoffs||[])}
     }
    }catch{}
   };
@@ -188,6 +191,10 @@ function App(){
       <div className="leadList">
        {leads.length?leads.slice(0,3).map(l=><article className="lead" key={l.id}><div className="avatar">{l.name[0]?.toUpperCase()}</div><div className="leadBody"><div><strong>{l.name}</strong><b>NEW</b></div><span>{l.property_type} · {l.location}</span><span>{l.budget} · {l.timeline}</span></div><button>View →</button></article>):<div className="empty compact"><div className="emptyIcon">◎</div><strong>No leads yet</strong><span>Your voice agent will create them here.</span></div>}
       </div>
+     </div>
+     <div className="panel followPanel">
+      <div className="panelHead"><div><span className="eyebrow">ESCALATION</span><h2>Human handoffs</h2></div><span className="count">{handoffs.length}</span></div>
+      <div className="followList">{handoffs.length?handoffs.slice(0,3).map(h=><div className="followItem" key={h.id}><div className="followIcon">↗</div><div><strong>{h.reason}</strong><span>{h.summary}</span></div></div>):<div className="empty compact"><strong>No handoffs yet</strong><span>Human escalation requests will appear here.</span></div>}</div>
      </div>
      <div className="panel followPanel">
       <div className="panelHead"><div><span className="eyebrow">NEXT UP</span><h2>Recent follow-ups</h2></div><button className="viewAll">View all →</button></div>
