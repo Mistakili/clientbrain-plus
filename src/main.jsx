@@ -17,6 +17,7 @@ function unb64(s){const raw=atob(s),a=new Uint8Array(raw.length);for(let i=0;i<r
 
 function App(){
  const[status,setStatus]=useState("Ready");
+ const[micLevel,setMicLevel]=useState(0);
  const[connected,setConnected]=useState(false);
  const[messages,setMessages]=useState([]);
  const[leads,setLeads]=useState([]);
@@ -102,7 +103,11 @@ function App(){
    source.connect(worklet.current);
    const socket=new WebSocket("wss://agents.assemblyai.com/v1/ws?token="+encodeURIComponent(d.token));
    ws.current=socket;
-   worklet.current.port.onmessage=e=>{if(socket.readyState===1&&session.current)socket.send(JSON.stringify({type:"input.audio",audio:b64(e.data)}))};
+   worklet.current.port.onmessage=e=>{
+    const pcm=e.data?.pcm||e.data;
+    if(e.data?.level!==undefined)setMicLevel(e.data.level);
+    if(socket.readyState===1&&session.current)socket.send(JSON.stringify({type:"input.audio",audio:b64(pcm)}))
+   };
    socket.onopen=()=>{
     if(d.agent_id){
      socket.send(JSON.stringify({type:"session.update",session:{agent_id:d.agent_id}}));
@@ -116,14 +121,22 @@ function App(){
    };
    socket.onmessage=async ev=>{
     const e=JSON.parse(ev.data);
-    if(e.type==="session.ready"){session.current=e.session_id;setConnected(true);setStatus("Listening");}
+    if(e.type==="session.ready"){
+     session.current=e.session_id;
+     setConnected(true);
+     setStatus("Listening");
+     socket.send(JSON.stringify({type:"session.update",session:{input:{turn_detection:{vad_threshold:.5,min_silence:700,max_silence:2500,interrupt_response:true}}}}));
+    }
+    else if(e.type==="input.speech.started"){setStatus("Listening");}
+    else if(e.type==="input.speech.stopped"){setStatus("Thinking");}
+    else if(e.type==="reply.started"){setStatus("Speaking");}
     else if(e.type==="transcript.user.delta"){setMessages(m=>{const rest=m.filter(x=>!x.partial);return[...rest,{id:"partial-user",role:"user",text:e.text||"",partial:true}]})}
     else if(e.type==="transcript.user"){setMessages(m=>[...m.filter(x=>x.id!=="partial-user"),{id:crypto.randomUUID(),role:"user",text:e.text||""}])}
     else if(e.type==="reply.audio"){play(e.data||e.audio)}
     else if(e.type==="transcript.agent"){if(e.text)add("agent",e.text)}
     else if(e.type==="tool.call"){pendingTools.current.push(e)}
     else if(e.type==="reply.done"){
-     if(e.status==="interrupted"){flush();pendingTools.current=[]}
+     if(e.status==="interrupted"){flush();pendingTools.current=[];setStatus("Listening")}
      else if(pendingTools.current.length){
       const calls=pendingTools.current.splice(0);
       for(const call of calls){
@@ -131,7 +144,7 @@ function App(){
        socket.send(JSON.stringify({type:"tool.result",call_id:call.call_id,result:JSON.stringify(result)}));
       }
      }
-     setStatus("Listening");
+     if(e.status!=="interrupted")setStatus("Listening");
     }
     else if(e.type==="session.error"){setStatus("Voice error: "+(e.error||e.message||"unknown"))}
     else if(e.type==="error"){setStatus("Error: "+(e.message||"unknown"))}
@@ -142,6 +155,7 @@ function App(){
  }
 
  function disconnect(){
+  setMicLevel(0);
   try{ws.current?.close()}catch{}
   try{stream.current?.getTracks().forEach(t=>t.stop())}catch{}
   try{worklet.current?.disconnect()}catch{}
@@ -151,7 +165,11 @@ function App(){
 
  const latestLead=leads[0];
  const navItems=[["Home","⌂"],["Leads","◎"],["Follow-ups","◌"],["Calendar","□"],["Insights","⌁"]];
- const voiceLabel=connected?(status.toLowerCase().includes("speak")?"ClientBrain is speaking":"Listening…"):"Ready";
+ const voiceLabel=connected
+  ? status==="Speaking"?"ClientBrain is speaking…"
+  : status==="Thinking"?"Thinking…"
+  : "Listening…"
+  : "Ready";
 
  return <div className="shell">
   <aside className="sidebar">
@@ -171,9 +189,9 @@ function App(){
    <section className="voiceCard">
     <div className="voiceTop"><div><span className="eyebrow">VOICE ASSISTANT</span><h2>Talk to your CRM.</h2><p>Capture leads, look up clients, and create follow-ups naturally.</p></div><button className="clearBtn" onClick={()=>setMessages([])}>Clear</button></div>
     <div className={"voiceCore "+(connected?"active":"")}>
-     <div className="wave left">{[1,2,3,4,5,6,7].map(i=><span key={i}/>)}</div>
+     <div className={"wave left "+(connected?"live":"")}>{[1,2,3,4,5,6,7].map(i=><span key={i} style={connected?{transform:`scaleY(${Math.max(.35,.55+micLevel*(i%3===0?1.8:1.15))})`}:undefined}/>)}</div>
      <button className={"voiceButton "+(connected?"connected":"")} onClick={connected?disconnect:connect} aria-label={connected?"End voice session":"Start voice session"}><div className="mic">⌁</div></button>
-     <div className="wave right">{[1,2,3,4,5,6,7].map(i=><span key={i}/>)}</div>
+     <div className={"wave right "+(connected?"live":"")}>{[1,2,3,4,5,6,7].map(i=><span key={i} style={connected?{transform:`scaleY(${Math.max(.35,.55+micLevel*(i%2===0?1.5:.9))})`}:undefined}/>)}</div>
     </div>
     <div className="voiceState"><strong>{voiceLabel}</strong><span>{connected?"Speak naturally — I'm listening":"Tap the microphone to start"}</span></div>
     <div className="suggestions"><button onClick={()=>connect()}>“I have a new lead…”</button><button onClick={()=>connect()}>“Show my leads…”</button><button onClick={()=>connect()}>“Create a follow-up…”</button></div>
@@ -185,7 +203,7 @@ function App(){
      <div className="messages">
       {messages.length?messages.map(m=><div key={m.id} className={"msg "+m.role+(m.partial?" partial":"")}><div className="msgIcon">{m.role==="user"?"A":"CB"}</div><div className="msgBody"><div className="msgMeta"><b>{m.role==="user"?"You":"ClientBrain"}</b><span>now</span></div><p>{m.text}</p></div></div>):<div className="empty"><div className="emptyIcon">⌁</div><strong>Your conversation will appear here</strong><span>Start the voice agent and talk naturally.</span></div>}
      </div>
-     {connected&&<div className="speakingBar"><div className="miniWave">{[1,2,3,4,5].map(i=><span key={i}/>)}</div><span>ClientBrain is listening…</span><button onClick={disconnect}>■</button></div>}
+     {connected&&<div className="speakingBar"><div className="miniWave">{[1,2,3,4,5].map(i=><span key={i}/>)}</div><span>{voiceLabel}</span><button onClick={disconnect}>■</button></div>}
     </div>
 
     <div className="rightColumn">
