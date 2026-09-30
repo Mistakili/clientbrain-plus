@@ -24,7 +24,7 @@ function App(){
  const[followups,setFollowups]=useState([]);
  const[handoffs,setHandoffs]=useState([]);
  const[activeNav,setActiveNav]=useState("Home");
- const ws=useRef(null),ctx=useRef(null),stream=useRef(null),worklet=useRef(null),sources=useRef([]),playAt=useRef(0),session=useRef(null),pendingTools=useRef([]),leadsRef=useRef([]);
+ const ws=useRef(null),ctx=useRef(null),stream=useRef(null),worklet=useRef(null),sources=useRef([]),playAt=useRef(0),session=useRef(null),pendingTools=useRef([]),leadsRef=useRef([]),intentionalClose=useRef(false),readyTimer=useRef(null);
 
  useEffect(()=>()=>disconnect(),[]);
 
@@ -89,6 +89,7 @@ function App(){
  }
 
  async function connect(){
+  intentionalClose.current=false;
   try{
    setStatus("Requesting secure voice session…");
    const r=await fetch("/api/voice-token");
@@ -109,23 +110,24 @@ function App(){
     if(socket.readyState===1&&session.current)socket.send(JSON.stringify({type:"input.audio",audio:b64(pcm)}))
    };
    socket.onopen=()=>{
-    if(d.agent_id){
-     socket.send(JSON.stringify({type:"session.update",session:{agent_id:d.agent_id}}));
-     return;
-    }
+    intentionalClose.current=false;
     socket.send(JSON.stringify({type:"session.update",session:{
      system_prompt:"You are ClientBrain Plus, a concise voice CRM assistant for real-estate agents. Help the realtor capture and manage leads by conversation. Ask only for information that is missing. When the user gives you a new lead, use create_lead. When asked about a saved lead, use get_lead. When asked to remember a follow-up, use create_followup. If the caller explicitly asks for a human or the request needs human assistance, tell them you will connect them and use transfer_to_human with a short reason and summary. Never invent saved data or claim a transfer succeeded unless the tool confirms it. Keep spoken replies short and natural.",
      greeting:"Hi — I'm ClientBrain. Tell me about a lead or ask me about someone you've saved.",
-     output:{voice:"ivy"},tools,input:{turn_detection:{vad_threshold:.5,min_silence:600,max_silence:1500,interrupt_response:true}}
+     output:{voice:"ivy"},
+     tools,
+     input:{turn_detection:{vad_threshold:.5,min_silence:700,max_silence:2500,interrupt_response:true}}
     }}));
+    clearTimeout(readyTimer.current);
+    readyTimer.current=setTimeout(()=>{if(!session.current&&socket.readyState===1){setStatus("Voice session did not become ready");try{socket.close()}catch{}}},10000);
    };
    socket.onmessage=async ev=>{
     const e=JSON.parse(ev.data);
     if(e.type==="session.ready"){
+     clearTimeout(readyTimer.current);
      session.current=e.session_id;
      setConnected(true);
      setStatus("Listening");
-     socket.send(JSON.stringify({type:"session.update",session:{input:{turn_detection:{vad_threshold:.5,min_silence:700,max_silence:2500,interrupt_response:true}}}}));
     }
     else if(e.type==="input.speech.started"){setStatus("Listening");}
     else if(e.type==="input.speech.stopped"){setStatus("Thinking");}
@@ -146,15 +148,30 @@ function App(){
      }
      if(e.status!=="interrupted")setStatus("Listening");
     }
-    else if(e.type==="session.error"){setStatus("Voice error: "+(e.error||e.message||"unknown"))}
-    else if(e.type==="error"){setStatus("Error: "+(e.message||"unknown"))}
+    else if(e.type==="session.error"){
+     const msg=e.message||e.error||e.code||"unknown";
+     setStatus("Voice error: "+msg);
+     add("agent","Voice session error: "+msg);
+    }
+    else if(e.type==="error"){
+     const msg=e.message||e.error||"unknown";
+     setStatus("Voice error: "+msg);
+     add("agent","Voice error: "+msg);
+    }
    };
-   socket.onerror=()=>setStatus("Voice connection error");
-   socket.onclose=()=>{setConnected(false);session.current=null;setStatus("Disconnected")};
+   socket.onerror=()=>setStatus("Voice WebSocket error");
+   socket.onclose=ev=>{
+    clearTimeout(readyTimer.current);
+    setConnected(false);
+    session.current=null;
+    if(!intentionalClose.current)setStatus("Voice connection closed"+(ev.code?" ("+ev.code+")":""));
+   };
   }catch(e){setStatus(e.message||"Could not start voice agent");disconnect()}
  }
 
  function disconnect(){
+  intentionalClose.current=true;
+  clearTimeout(readyTimer.current);
   setMicLevel(0);
   try{ws.current?.close()}catch{}
   try{stream.current?.getTracks().forEach(t=>t.stop())}catch{}
