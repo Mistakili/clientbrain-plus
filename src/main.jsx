@@ -26,6 +26,7 @@ function App(){
  const[toolStatus,setToolStatus]=useState("");
  const[justCaptured,setJustCaptured]=useState(null);
  const[activeNav,setActiveNav]=useState("Home");
+ const[showWorkspace,setShowWorkspace]=useState(false);
  const[selectedLead,setSelectedLead]=useState(null);
  const[showAllLeads,setShowAllLeads]=useState(false);
  const[showAllFollowups,setShowAllFollowups]=useState(false);
@@ -194,6 +195,13 @@ function App(){
   : status==="Thinking"?"Thinking…"
   : "Listening…"
   : "Ready";
+
+ if(!showWorkspace)return <div className="landing">
+  <div className="landingNav"><div className="brand"><div className="logo">CB</div><div><strong>ClientBrain <em>Plus</em></strong><small>Voice-first CRM</small></div></div><span className="hackBadge">ASSEMBLYAI VOICE AGENT</span></div>
+  <section className="hero"><div className="heroCopy"><span className="eyebrow">VOICE-FIRST CRM FOR REAL-ESTATE AGENTS</span><h1>Your CRM<br/><em>should listen.</em></h1><p>Capture leads, look up clients, and schedule follow-ups — naturally, just by talking.</p><button className="heroButton" onClick={()=>setShowWorkspace(true)}>Try the live demo <span>→</span></button><div className="heroMeta"><span>● Live voice</span><span>→</span><span>AI tool calls</span><span>→</span><span>CRM actions</span></div></div><div className="heroVisual"><div className="miniOrb"><div className="miniRing r1"/><div className="miniRing r2"/><div className="miniCore">⌁</div></div><div className="voiceCardMini"><span className="liveDot"/> ClientBrain is listening<span className="miniBars">▂▅▇▅▂</span></div></div></section>
+  <section className="featureStrip"><article><span>01</span><strong>Capture leads</strong><p>Tell ClientBrain about a new buyer and it creates the lead for you.</p></article><article><span>02</span><strong>Manage clients</strong><p>Ask about saved leads or update their details through conversation.</p></article><article><span>03</span><strong>Never miss a follow-up</strong><p>Say when you want to follow up and ClientBrain schedules it.</p></article></section>
+  <footer><span>ClientBrain Plus · Hackathon prototype</span><span>Built with AssemblyAI Voice Agent</span></footer>
+ </div>
 
  return <div className="shell">
   <aside className="sidebar">
