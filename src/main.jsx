@@ -143,7 +143,7 @@ function App(){
     else if(e.type==="transcript.user"){setMessages(m=>[...m.filter(x=>x.id!=="partial-user"),{id:crypto.randomUUID(),role:"user",text:e.text||""}])}
     else if(e.type==="reply.audio"){play(e.data||e.audio)}
     else if(e.type==="transcript.agent"){if(e.text)add("agent",e.text)}
-    else if(e.type==="tool.call"){pendingTools.current.push(e);setToolStatus(e.name==="create_lead"?"Capturing lead…":e.name==="create_followup"?"Creating follow-up…":e.name==="get_lead"?"Looking up lead…":e.name==="update_lead"?"Updating lead…":"Processing CRM action…")}
+    else if(e.type==="tool.call"){pendingTools.current.push(e);const label=e.name==="create_lead"?"create_lead":e.name==="create_followup"?"create_followup":e.name==="get_lead"?"get_lead":e.name==="update_lead"?"update_lead":e.name;setToolStatus(label==="create_lead"?"Capturing lead…":label==="create_followup"?"Creating follow-up…":label==="get_lead"?"Looking up lead…":label==="update_lead"?"Updating lead…":"Processing CRM action…");add("system","⚡ "+label+" called",{tool:true});}
     else if(e.type==="reply.done"){
      if(e.status==="interrupted"){flush();pendingTools.current=[];setStatus("Listening")}
      else if(pendingTools.current.length){
