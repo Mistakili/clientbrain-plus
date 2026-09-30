@@ -24,6 +24,9 @@ function App(){
  const[followups,setFollowups]=useState([]);
  const[handoffs,setHandoffs]=useState([]);
  const[activeNav,setActiveNav]=useState("Home");
+ const[selectedLead,setSelectedLead]=useState(null);
+ const[showAllLeads,setShowAllLeads]=useState(false);
+ const[showAllFollowups,setShowAllFollowups]=useState(false);
  const ws=useRef(null),ctx=useRef(null),stream=useRef(null),worklet=useRef(null),sources=useRef([]),playAt=useRef(0),session=useRef(null),pendingTools=useRef([]),leadsRef=useRef([]),intentionalClose=useRef(false),readyTimer=useRef(null);
 
  useEffect(()=>()=>disconnect(),[]);
@@ -225,10 +228,10 @@ function App(){
 
     <div className="rightColumn">
      <div className="panel leadsPanel">
-      <div className="panelHead"><div><span className="eyebrow">CRM</span><h2>Leads</h2></div><button className="viewAll">View all →</button></div>
+      <div className="panelHead"><div><span className="eyebrow">CRM</span><h2>Leads</h2></div><button className="viewAll" onClick={()=>setShowAllLeads(true)}>View all →</button></div>
       <div className="stats"><div><strong>{leads.length}</strong><span>Total leads</span></div><div><strong>{followups.length}</strong><span>Need follow-up</span></div></div>
       <div className="leadList">
-       {leads.length?leads.slice(0,3).map(l=><article className="lead" key={l.id}><div className="avatar">{l.name[0]?.toUpperCase()}</div><div className="leadBody"><div><strong>{l.name}</strong><b>NEW</b></div><span>{l.property_type} · {l.location}</span><span>{l.budget} · {l.timeline}</span></div><button>View →</button></article>):<div className="empty compact"><div className="emptyIcon">◎</div><strong>No leads yet</strong><span>Your voice agent will create them here.</span></div>}
+       {leads.length?leads.slice(0,3).map(l=><article className="lead" key={l.id}><div className="avatar">{l.name[0]?.toUpperCase()}</div><div className="leadBody"><div><strong>{l.name}</strong><b>NEW</b></div><span>{l.property_type} · {l.location}</span><span>{l.budget} · {l.timeline}</span></div><button onClick={()=>setSelectedLead(l)}>View →</button></article>):<div className="empty compact"><div className="emptyIcon">◎</div><strong>No leads yet</strong><span>Your voice agent will create them here.</span></div>}
       </div>
      </div>
      <div className="panel followPanel">
@@ -241,6 +244,24 @@ function App(){
      </div>
     </div>
    </section>
+
+   {(selectedLead||showAllLeads||showAllFollowups)&&<div className="modalBackdrop" onClick={()=>{setSelectedLead(null);setShowAllLeads(false);setShowAllFollowups(false)}}>
+    <div className="modal" onClick={e=>e.stopPropagation()}>
+     <div className="modalHead">
+      <div><span className="eyebrow">{selectedLead?"LEAD DETAILS":showAllLeads?"CRM":"NEXT UP"}</span><h2>{selectedLead?selectedLead.name:showAllLeads?"All leads":"Follow-ups"}</h2></div>
+      <button className="modalClose" onClick={()=>{setSelectedLead(null);setShowAllLeads(false);setShowAllFollowups(false)}}>×</button>
+     </div>
+     {selectedLead?<div className="modalBody">
+       <div className="detailRow"><span>Property</span><strong>{selectedLead.property_type}</strong></div>
+       <div className="detailRow"><span>Location</span><strong>{selectedLead.location}</strong></div>
+       <div className="detailRow"><span>Budget</span><strong>{selectedLead.budget}</strong></div>
+       <div className="detailRow"><span>Timeline</span><strong>{selectedLead.timeline}</strong></div>
+       {selectedLead.notes&&<div className="detailNotes"><span>Notes</span><p>{selectedLead.notes}</p></div>}
+      </div>
+      :showAllLeads?<div className="modalList">{leads.length?leads.map(l=><button className="modalItem" key={l.id} onClick={()=>setSelectedLead(l)}><div className="avatar">{l.name[0]?.toUpperCase()}</div><div><strong>{l.name}</strong><span>{l.property_type} · {l.location}</span><span>{l.budget} · {l.timeline}</span></div><b>View →</b></button>):<div className="empty compact"><strong>No leads yet</strong><span>Your voice agent will create them here.</span></div>}</div>
+      :<div className="modalList">{followups.length?followups.map(f=><div className="modalItem" key={f.id}><div className="followIcon">↗</div><div><strong>{f.note||"Follow up with "+f.name}</strong><span>{f.name}</span><span>Scheduled: {f.when}</span></div></div>):<div className="empty compact"><strong>No follow-ups yet</strong><span>Ask ClientBrain to schedule one.</span></div>}</div>}
+    </div>
+   </div>}
 
    <footer><span>ClientBrain Plus · Hackathon prototype</span><span>Voice-first CRM · AssemblyAI</span></footer>
   </main>
