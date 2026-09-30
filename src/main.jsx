@@ -23,6 +23,7 @@ function App(){
  const[leads,setLeads]=useState([]);
  const[followups,setFollowups]=useState([]);
  const[handoffs,setHandoffs]=useState([]);
+ const[toolStatus,setToolStatus]=useState("");
  const[activeNav,setActiveNav]=useState("Home");
  const[selectedLead,setSelectedLead]=useState(null);
  const[showAllLeads,setShowAllLeads]=useState(false);
@@ -85,6 +86,8 @@ function App(){
    const endpoint=call.name==="transfer_to_human"?"/api/transfer":"/api/crm";
    const r=await fetch(endpoint,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({tool:call.name,arguments:args,...args})});
    const result=await r.json();
+   setToolStatus(result.ok===false?"Tool action failed":"CRM updated");
+   setTimeout(()=>setToolStatus(""),2200);
    if(result.lead)setLeads(x=>[result.lead,...x.filter(y=>y.id!==result.lead.id)]);
    if(result.followup)setFollowups(x=>[result.followup,...x.filter(y=>y.id!==result.followup.id)]);
    return result;
@@ -139,7 +142,7 @@ function App(){
     else if(e.type==="transcript.user"){setMessages(m=>[...m.filter(x=>x.id!=="partial-user"),{id:crypto.randomUUID(),role:"user",text:e.text||""}])}
     else if(e.type==="reply.audio"){play(e.data||e.audio)}
     else if(e.type==="transcript.agent"){if(e.text)add("agent",e.text)}
-    else if(e.type==="tool.call"){pendingTools.current.push(e)}
+    else if(e.type==="tool.call"){pendingTools.current.push(e);setToolStatus(e.name==="create_lead"?"Capturing lead…":e.name==="create_followup"?"Creating follow-up…":e.name==="get_lead"?"Looking up lead…":e.name==="update_lead"?"Updating lead…":"Processing CRM action…")}
     else if(e.type==="reply.done"){
      if(e.status==="interrupted"){flush();pendingTools.current=[];setStatus("Listening")}
      else if(pendingTools.current.length){
@@ -213,8 +216,8 @@ function App(){
      <button className={"voiceButton "+(connected?"connected":"")} onClick={connected?disconnect:connect} aria-label={connected?"End voice session":"Start voice session"}><div className="mic">⌁</div></button>
      <div className={"wave right "+(connected?"live":"")}>{[1,2,3,4,5,6,7].map(i=><span key={i} style={connected?{transform:`scaleY(${Math.max(.35,.55+micLevel*(i%2===0?1.5:.9))})`}:undefined}/>)}</div>
     </div>
-    <div className="voiceState"><strong>{voiceLabel}</strong><span>{connected?"Speak naturally — I'm listening":"Tap the microphone to start"}</span></div>
-    <div className="suggestions"><button onClick={()=>connect()}>“I have a new lead…”</button><button onClick={()=>connect()}>“Show my leads…”</button><button onClick={()=>connect()}>“Create a follow-up…”</button></div>
+    <div className="voiceState"><strong>{toolStatus||voiceLabel}</strong><span>{toolStatus?"ClientBrain is updating the CRM in real time":connected?"Speak naturally — I'm listening":"Tap the microphone to start"}</span></div>
+    <div className="suggestions"><button onClick={()=>connect()}>“I have a new lead…”</button><button onClick={()=>connect()}>“Show my leads…”</button><button onClick={()=>connect()}>“Create a follow-up…”</button></div><div className="demoHint"><span>●</span> Live voice → AI tool call → CRM update</div>
    </section>
 
    <section className="contentGrid">
