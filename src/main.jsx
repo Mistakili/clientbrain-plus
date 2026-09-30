@@ -24,6 +24,7 @@ function App(){
  const[followups,setFollowups]=useState([]);
  const[handoffs,setHandoffs]=useState([]);
  const[toolStatus,setToolStatus]=useState("");
+ const[justCaptured,setJustCaptured]=useState(null);
  const[activeNav,setActiveNav]=useState("Home");
  const[selectedLead,setSelectedLead]=useState(null);
  const[showAllLeads,setShowAllLeads]=useState(false);
@@ -88,7 +89,7 @@ function App(){
    const result=await r.json();
    setToolStatus(result.ok===false?"Tool action failed":"CRM updated");
    setTimeout(()=>setToolStatus(""),2200);
-   if(result.lead)setLeads(x=>[result.lead,...x.filter(y=>y.id!==result.lead.id)]);
+   if(result.lead){setLeads(x=>[result.lead,...x.filter(y=>y.id!==result.lead.id)]);setJustCaptured(result.lead);setTimeout(()=>setJustCaptured(null),5000);}
    if(result.followup)setFollowups(x=>[result.followup,...x.filter(y=>y.id!==result.followup.id)]);
    return result;
   }catch{return{ok:false,message:"CRM service unavailable"}}
@@ -233,6 +234,7 @@ function App(){
      <div className="panel leadsPanel">
       <div className="panelHead"><div><span className="eyebrow">CRM</span><h2>Leads</h2></div><button className="viewAll" onClick={()=>setShowAllLeads(true)}>View all →</button></div>
       <div className="stats"><div><strong>{leads.length}</strong><span>Total leads</span></div><div><strong>{followups.length}</strong><span>Need follow-up</span></div></div>
+      {justCaptured&&<div className="captureBanner"><div className="captureCheck">✓</div><div><strong>Lead captured</strong><span>{justCaptured.name} was added to your CRM.</span></div></div>}
       <div className="leadList">
        {leads.length?leads.slice(0,3).map(l=><article className="lead" key={l.id}><div className="avatar">{l.name[0]?.toUpperCase()}</div><div className="leadBody"><div><strong>{l.name}</strong><b>NEW</b></div><span>{l.property_type} · {l.location}</span><span>{l.budget} · {l.timeline}</span></div><button onClick={()=>setSelectedLead(l)}>View →</button></article>):<div className="empty compact"><div className="emptyIcon">◎</div><strong>No leads yet</strong><span>Your voice agent will create them here.</span></div>}
       </div>
