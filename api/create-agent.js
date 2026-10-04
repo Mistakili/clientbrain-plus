@@ -1,26 +1,20 @@
-export default async function handler(req,res){
-  if(req.method!=="POST")return res.status(405).json({error:"Method not allowed"});
-  const key=process.env.ASSEMBLYAI_API_KEY;
-  if(!key)return res.status(500).json({error:"ASSEMBLYAI_API_KEY is not configured"});
-  const origin=req.headers.origin||req.headers.referer||"";
-  const forwarded=req.headers["x-forwarded-proto"]&&req.headers["x-forwarded-host"]?`${req.headers["x-forwarded-proto"]}://${req.headers["x-forwarded-host"]}`:"";
-  const base=origin.startsWith("http")?new URL(origin).origin:(forwarded||"");
-  if(!base)return res.status(400).json({error:"Could not determine app origin"});
-  const secret=process.env.CLIENTBRAIN_TOOL_SECRET;
-  const toolUrl=base+"/api/crm"+(secret?"?tool_key="+encodeURIComponent(secret):"");
-  const transferUrl=base+"/api/transfer"+(secret?"?tool_key="+encodeURIComponent(secret):"");
-  const tools=[
-    {name:"create_lead",description:"Create a new real-estate lead from details the caller provides. Ask for the person's name if missing. Never invent missing values.",parameters:{type:"object",properties:{name:{type:"string"},property_type:{type:"string"},location:{type:"string"},budget:{type:"string"},timeline:{type:"string"},notes:{type:"string"}},required:["name"]},http:{url:toolUrl,http_method:"POST"}},
-    {name:"get_lead",description:"Look up a saved lead by name.",parameters:{type:"object",properties:{name:{type:"string"}},required:["name"]},http:{url:toolUrl,http_method:"POST"}},
-    {name:"update_lead",description:"Update an existing saved lead when the caller adds or corrects details. Never invent values or overwrite fields the caller did not provide.",parameters:{type:"object",properties:{name:{type:"string"},property_type:{type:"string"},location:{type:"string"},budget:{type:"string"},timeline:{type:"string"},notes:{type:"string"}},required:["name"]},http:{url:toolUrl,http_method:"POST"}},
-    {name:"create_followup",description:"Create a follow-up reminder for a lead.",parameters:{type:"object",properties:{name:{type:"string"},when:{type:"string"},note:{type:"string"}},required:["name","when"]},http:{url:toolUrl,http_method:"POST"}},
-    {name:"transfer_to_human",description:"Transfer the caller to a human real-estate agent when they explicitly ask for a person or the request needs human assistance. Tell the caller you are connecting them, then call this tool with a short reason and summary.",parameters:{type:"object",properties:{reason:{type:"string"},summary:{type:"string"}},required:["reason","summary"]},execution_mode:"hold",timeout_seconds:60,http:{url:transferUrl,http_method:"POST"}}
-  ];
-  const body={name:"ClientBrain Plus Phone Agent",system_prompt:"You are ClientBrain Plus, a concise voice CRM receptionist for real-estate teams. Capture property leads naturally. Ask only for missing details. Use create_lead for new leads, get_lead for saved leads, update_lead when saved lead details change, and create_followup for reminders. If the caller explicitly asks for a human or the request needs human assistance, tell them you will connect them and use transfer_to_human with a short reason and summary. Never invent saved data, confirmations, or successful transfers. Keep replies short and natural.",greeting:"Hi — you're through to ClientBrain. Tell me what you're looking for and I'll capture the details.",voice:{voice_id:"ivy"},tools};
-  try{
-    const r=await fetch("https://agents.assemblyai.com/v1/agents",{method:"POST",headers:{"Authorization":"Bearer "+key,"Content-Type":"application/json"},body:JSON.stringify(body)});
-    const data=await r.json();
-    if(!r.ok)return res.status(r.status).json({error:data?.error||"AssemblyAI agent creation failed"});
-    return res.status(200).json({agent_id:data.id});
-  }catch{return res.status(500).json({error:"Agent setup failed"});}
+import { ensureAgent } from "./_lib/agents.js";
+import { readCookie, secretConfigured, SESSION_COOKIE } from "./_lib/auth.js";
+import { ownerFromToken } from "./_lib/db.js";
+import { guard, send } from "./_lib/http.js";
+import { appBaseFromRequest, originMatchesApp } from "./_lib/voice.js";
+
+async function handler(req, res) {
+  if (req.method !== "POST") return send(res, 405, { error: "Method not allowed" });
+  if (!secretConfigured()) return send(res, 500, { error: "CLIENTBRAIN_TOOL_SECRET must be at least 16 characters" });
+  const owner = await ownerFromToken(readCookie(req, SESSION_COOKIE));
+  if (!owner) return send(res, 401, { error: "Sign in required" });
+  const base = appBaseFromRequest(req);
+  if (!base) return send(res, 400, { error: "Could not determine app origin" });
+  if (!originMatchesApp(req, base)) return send(res, 400, { error: "App origin does not match this deployment" });
+  const result = await ensureAgent({ ownerId: owner.id, base, secret: process.env.CLIENTBRAIN_TOOL_SECRET });
+  if (!result.agent_id) return send(res, 502, { error: result.error || "Voice agent setup failed" });
+  return send(res, 200, { agent_id: result.agent_id });
 }
+
+export default guard(handler);
