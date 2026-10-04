@@ -14,7 +14,18 @@
 .logo img{width:100%;height:100%;object-fit:cover;display:block}
 .landing .logo{background:#101218}
 .heroVisual{height:auto;min-height:430px}
-.heroMascot{width:min(420px,100%);max-height:480px;object-fit:cover;object-position:center top;border-radius:32px;display:block;margin:0 auto;box-shadow:0 30px 80px #000a}
+.heroMascotButton{border:0;padding:0;background:transparent;cursor:pointer;display:block;width:min(420px,100%);margin:0 auto}
+.heroMascotButton:focus-visible{outline:2px solid #918bff;outline-offset:6px;border-radius:36px}
+.heroMascot{width:100%;max-height:480px;object-fit:cover;object-position:center;border-radius:32px;display:block;box-shadow:0 30px 80px #000a}
+.heroMascot.hop{animation:pickoHop .62s cubic-bezier(.2,.8,.2,1)}
+.heroMascot.tilt{animation:pickoTilt .7s ease}
+.heroMascot.lean{animation:pickoLean .65s ease}
+.heroMascot.pop{animation:pickoPop .5s ease}
+@keyframes pickoHop{0%{transform:translateY(8px) scale(.98)}35%{transform:translateY(-22px) scale(1.04)}100%{transform:none}}
+@keyframes pickoTilt{0%{transform:rotate(0)}40%{transform:rotate(-8deg) translateX(-10px)}100%{transform:none}}
+@keyframes pickoLean{0%{transform:none}45%{transform:translateX(16px) rotate(5deg) scale(1.03)}100%{transform:none}}
+@keyframes pickoPop{0%{transform:scale(1)}35%{transform:scale(1.08)}70%{transform:scale(.97)}100%{transform:scale(1)}}
+@media(prefers-reduced-motion:reduce){.heroMascot.hop,.heroMascot.tilt,.heroMascot.lean,.heroMascot.pop{animation:none}}
 .voiceCardMini{z-index:1}
 .msgIcon img{width:100%;height:100%;object-fit:cover;border-radius:inherit;display:block}
 .authBrand{margin-bottom:18px}

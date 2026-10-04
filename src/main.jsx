@@ -24,6 +24,14 @@ function isNewLead(lead) {
   return Number.isFinite(created) && Date.now() - created < DAY;
 }
 
+const PICKO_REACTIONS = [
+  { src: "/picko.jpg", line: "Tap Picko", motion: "" },
+  { src: "/picko-laugh.jpg", line: "Ha — tell me about them", motion: "hop" },
+  { src: "/picko-curious.jpg", line: "Which buyer is this?", motion: "tilt" },
+  { src: "/picko-listen.jpg", line: "I'm all ears", motion: "lean" },
+  { src: "/picko-surprise.jpg", line: "Oh — a new lead?", motion: "pop" }
+];
+
 function toolLabel(name, phase) {
   const labels = {
     create_lead: ["Capturing lead…", "Lead captured"],
@@ -55,6 +63,8 @@ function App() {
   const [selectedLead, setSelectedLead] = useState(null);
   const [showAllLeads, setShowAllLeads] = useState(false);
   const [showAllFollowups, setShowAllFollowups] = useState(false);
+  const [pickoReaction, setPickoReaction] = useState(0);
+  const [pickoPoke, setPickoPoke] = useState(0);
   const ws = useRef(null);
   const ctx = useRef(null);
   const stream = useRef(null);
@@ -84,6 +94,13 @@ function App() {
       if (data.user) setUser(data.user);
     }).catch(() => {});
     return () => { alive = false; };
+  }, []);
+
+  useEffect(() => {
+    PICKO_REACTIONS.forEach((mood) => {
+      const image = new Image();
+      image.src = mood.src;
+    });
   }, []);
 
   useEffect(() => {
@@ -368,6 +385,11 @@ function App() {
     ? status === "Speaking" ? "Picko is speaking…" : status === "Thinking" ? "Thinking…" : "Picko is listening"
     : "Ready";
   const mark = <div className="logo"><img src="/picko-mark.jpg" alt="" /></div>;
+  const pickoMood = PICKO_REACTIONS[pickoReaction];
+  function pokePicko() {
+    setPickoReaction((current) => (current % (PICKO_REACTIONS.length - 1)) + 1);
+    setPickoPoke((count) => count + 1);
+  }
 
   if (showAuth) {
     return (
@@ -409,8 +431,10 @@ function App() {
             <div className="heroMeta"><span>● Live voice</span><span>→</span><span>Saved leads</span><span>→</span><span>Follow-ups</span></div>
           </div>
           <div className="heroVisual">
-            <img className="heroMascot" src="/picko.jpg" alt="Picko, the Agent Picko mascot" />
-            <div className="voiceCardMini"><span className="liveDot" /> Picko is listening<span className="miniBars">▂▅▇▅▂</span></div>
+            <button type="button" className="heroMascotButton" onClick={pokePicko} aria-label="Picko. Tap her for another reaction.">
+              <img key={pickoPoke} className={"heroMascot" + (pickoMood.motion ? " " + pickoMood.motion : "")} src={pickoMood.src} alt="" />
+            </button>
+            <div className="voiceCardMini"><span className="liveDot" /> {pickoMood.line}<span className="miniBars">▂▅▇▅▂</span></div>
           </div>
         </section>
         <section className="featureStrip">
