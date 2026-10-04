@@ -8,7 +8,7 @@ test("phone tools use the deployment host and keep the secret out of the URL", (
   const secret = "super-secret-value";
   const payload = agentPayload({
     ownerId: "owner-12345678",
-    base: "https://clientbrain-plus-ruby.vercel.app",
+    base: "https://agent-picko.vercel.app",
     secret
   });
   const browser = voiceSession();
@@ -17,7 +17,7 @@ test("phone tools use the deployment host and keep the secret out of the URL", (
   assert.deepEqual(payload.tools.map((tool) => tool.name), browser.tools.map((tool) => tool.name));
   for (const tool of payload.tools) {
     const url = new URL(tool.http.url);
-    assert.equal(url.host, "clientbrain-plus-ruby.vercel.app");
+    assert.equal(url.host, "agent-picko.vercel.app");
     assert.equal(url.searchParams.get("tool"), tool.name);
     assert.equal(url.searchParams.has("tool_key"), false);
     assert.equal(url.search.includes(secret), false);
@@ -31,11 +31,11 @@ test("a caller origin cannot choose where tools are sent", () => {
   const req = {
     headers: {
       origin: "https://evil.example",
-      "x-forwarded-host": "clientbrain-plus-ruby.vercel.app",
+      "x-forwarded-host": "agent-picko.vercel.app",
       "x-forwarded-proto": "https"
     }
   };
   const base = appBaseFromRequest(req);
-  assert.equal(base, "https://clientbrain-plus-ruby.vercel.app");
+  assert.equal(base, "https://agent-picko.vercel.app");
   assert.equal(originMatchesApp(req, base), false);
 });
