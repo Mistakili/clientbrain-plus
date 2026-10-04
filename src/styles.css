@@ -30,6 +30,24 @@
 .msgIcon img{width:100%;height:100%;object-fit:cover;border-radius:inherit;display:block}
 .authBrand{margin-bottom:18px}
 @media(max-width:760px){.heroVisual{height:auto;min-height:0}.heroMascot{max-height:320px;border-radius:24px}}
+.mobileNav{display:none}
+.bookPage{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(280px,.85fr);gap:17px;align-items:start}
+.bookPage .panel{min-height:420px}
+.bookPick{width:100%;color:inherit;font:inherit;text-align:left;cursor:pointer}
+.bookPick.active{border-color:#766cff;background:#17192a}
+.bookDetailBody{padding:8px 19px 22px}
+.bookDetailBody h2,.bookDetailBody p{margin:0}
+.bookDetailBody .when{color:#918bff;font-size:14px;margin:14px 0 8px}
+.bookDetailBody>p{color:#c7cad3;font-size:14px;line-height:1.5}
+.bookEmpty{padding:28px 19px}
+@media(max-width:950px){
+  .mobileNav{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:0 0 14px}
+  .mobileNav button{border:1px solid #20232e;background:#0d0f15;color:#8c90a0;border-radius:12px;padding:10px 8px;font:inherit;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px}
+  .mobileNav button.active{background:#17192a;color:#a9a6ff;border-color:#766cff}
+  .mobileNav i{font-style:normal}
+  .bookPage{grid-template-columns:1fr}
+  .pageTitle{display:block}
+}
 .authScreen{min-height:100vh;display:grid;place-items:center;padding:24px;background:radial-gradient(circle at 70% 20%,#171c2d 0,#08090e 55%)}
 .authCard{width:min(420px,100%);background:#0d0f15;border:1px solid #20232e;border-radius:18px;padding:28px 24px}
 .authCard h2{margin:8px 0 6px;font-size:32px;letter-spacing:-.045em}

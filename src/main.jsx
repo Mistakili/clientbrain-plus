@@ -61,8 +61,7 @@ function App() {
   const [authError, setAuthError] = useState("");
   const [authBusy, setAuthBusy] = useState(false);
   const [selectedLead, setSelectedLead] = useState(null);
-  const [showAllLeads, setShowAllLeads] = useState(false);
-  const [showAllFollowups, setShowAllFollowups] = useState(false);
+  const [selectedFollowupId, setSelectedFollowupId] = useState(null);
   const [pickoReaction, setPickoReaction] = useState(0);
   const [pickoPoke, setPickoPoke] = useState(0);
   const ws = useRef(null);
@@ -447,7 +446,16 @@ function App() {
     );
   }
 
-  const closeModal = () => { setSelectedLead(null); setShowAllLeads(false); setShowAllFollowups(false); };
+  function openNav(name, item) {
+    setActiveNav(name);
+    if (name === "Leads") setSelectedLead(item || selectedLead || leads[0] || null);
+    if (name === "Follow-ups") setSelectedFollowupId(item?.id || selectedFollowupId || followups[0]?.id || null);
+  }
+
+  const shownLead = leads.find((lead) => lead.id === selectedLead?.id) || null;
+  const shownFollowup = followups.find((followup) => followup.id === selectedFollowupId) || null;
+  const followupLead = shownFollowup ? leads.find((lead) => lead.name === shownFollowup.name) : null;
+  const pageEyebrow = activeNav === "Leads" ? "CRM" : activeNav === "Follow-ups" ? "NEXT UP" : "VOICE WORKSPACE";
 
   return (
     <div className="shell">
@@ -455,7 +463,7 @@ function App() {
         <div className="brand">{mark}<div><strong>Agent <em>Picko</em></strong><small>Voice-first CRM</small></div></div>
         <nav>
           {navItems.map(([name, icon]) => (
-            <button key={name} className={activeNav === name ? "active" : ""} onClick={() => setActiveNav(name)}>
+            <button key={name} className={activeNav === name ? "active" : ""} onClick={() => openNav(name)}>
               <i>{icon}</i><span>{name}</span>
               {name === "Leads" && leads.length > 0 && <b>{leads.length}</b>}
               {name === "Follow-ups" && followups.length > 0 && <b>{followups.length}</b>}
@@ -469,12 +477,20 @@ function App() {
       <main className="workspace">
         <header className="topbar">
           <div className="mobileBrand">{mark}<strong>Agent <em>Picko</em></strong></div>
-          <div className="pageTitle"><span className="eyebrow">VOICE WORKSPACE</span><h1>{activeNav}</h1></div>
+          <div className="pageTitle"><span className="eyebrow">{pageEyebrow}</span><h1>{activeNav}</h1></div>
           <div className="topActions">
             <button className="topSignOut" onClick={signOut}>Sign out</button>
             <div className={"livePill " + (connected ? "on" : "")}><span /> {connected ? "LIVE" : "READY"}</div>
           </div>
         </header>
+        <nav className="mobileNav">
+          {navItems.map(([name, icon]) => (
+            <button key={name} className={activeNav === name ? "active" : ""} onClick={() => openNav(name)}>
+              <i>{icon}</i><span>{name}</span>
+            </button>
+          ))}
+        </nav>
+        {activeNav === "Home" && <>
         <section className="voiceCard">
           <div className="voiceTop"><div><span className="eyebrow">VOICE ASSISTANT</span><h2>Talk to your CRM.</h2><p>Capture leads, look up clients, and create follow-ups naturally.</p></div><button className="clearBtn" onClick={() => setMessages([])}>Clear</button></div>
           <div className={"voiceCore " + (connected ? "active" : "")}>
@@ -505,7 +521,7 @@ function App() {
           </div>
           <div className="rightColumn">
             <div className="panel leadsPanel">
-              <div className="panelHead"><div><span className="eyebrow">CRM</span><h2>Leads</h2></div><button className="viewAll" onClick={() => { setSelectedLead(null); setShowAllFollowups(false); setShowAllLeads(true); }}>View all →</button></div>
+              <div className="panelHead"><div><span className="eyebrow">CRM</span><h2>Leads</h2></div><button className="viewAll" onClick={() => openNav("Leads")}>View all →</button></div>
               <div className="stats"><div><strong>{leads.length}</strong><span>Total leads</span></div><div><strong>{followups.length}</strong><span>Need follow-up</span></div></div>
               {justCaptured && <div className="captureBanner"><div className="captureCheck">✓</div><div><strong>Lead captured</strong><span>{justCaptured.name} was added to your book.</span></div></div>}
               <div className="leadList">
@@ -517,7 +533,7 @@ function App() {
                       <span>{lead.property_type} · {lead.location}</span>
                       <span>{lead.budget} · {lead.timeline}</span>
                     </div>
-                    <button onClick={() => setSelectedLead(lead)}>View →</button>
+                    <button onClick={() => openNav("Leads", lead)}>View →</button>
                   </article>
                 )) : <div className="empty compact"><div className="emptyIcon">◎</div><strong>No leads yet</strong><span>Your voice agent will create them here.</span></div>}
               </div>
@@ -527,41 +543,78 @@ function App() {
               <div className="followList">{handoffs.length ? handoffs.slice(0, 3).map((handoff) => <div className="followItem" key={handoff.id}><div className="followIcon">↗</div><div><strong>{handoff.reason}</strong><span>{handoff.summary}</span></div></div>) : <div className="empty compact"><strong>No handoffs yet</strong><span>Human escalation requests will appear here.</span></div>}</div>
             </div>
             <div className="panel followPanel">
-              <div className="panelHead"><div><span className="eyebrow">NEXT UP</span><h2>Recent follow-ups</h2></div><button className="viewAll" onClick={() => { setSelectedLead(null); setShowAllLeads(false); setShowAllFollowups(true); }}>View all →</button></div>
+              <div className="panelHead"><div><span className="eyebrow">NEXT UP</span><h2>Recent follow-ups</h2></div><button className="viewAll" onClick={() => openNav("Follow-ups")}>View all →</button></div>
               <div className="followList">{followups.length ? followups.slice(0, 3).map((followup) => <div className="followItem" key={followup.id}><div className="followIcon">↗</div><div><strong>{followup.note || `Follow up with ${followup.name}`}</strong><span>{followup.name} · {followup.when}</span></div></div>) : <div className="empty compact"><strong>No follow-ups yet</strong><span>Ask Picko to schedule one.</span></div>}</div>
             </div>
           </div>
         </section>
-        {(selectedLead || showAllLeads || showAllFollowups) && (
-          <div className="modalBackdrop" onClick={closeModal}>
-            <div className="modal" onClick={(event) => event.stopPropagation()}>
-              <div className="modalHead">
-                <div><span className="eyebrow">{selectedLead ? "LEAD DETAILS" : showAllLeads ? "CRM" : "NEXT UP"}</span><h2>{selectedLead ? selectedLead.name : showAllLeads ? "All leads" : "Follow-ups"}</h2></div>
-                <button className="modalClose" onClick={closeModal}>×</button>
-              </div>
-              {selectedLead ? (
-                <div className="modalBody">
-                  <div className="detailRow"><span>Property</span><strong>{selectedLead.property_type}</strong></div>
-                  <div className="detailRow"><span>Location</span><strong>{selectedLead.location}</strong></div>
-                  <div className="detailRow"><span>Budget</span><strong>{selectedLead.budget}</strong></div>
-                  <div className="detailRow"><span>Timeline</span><strong>{selectedLead.timeline}</strong></div>
-                  {selectedLead.notes && <div className="detailNotes"><span>Notes</span><p>{selectedLead.notes}</p></div>}
-                </div>
-              ) : showAllLeads ? (
-                <div className="modalList">{leads.length ? leads.map((lead) => (
-                  <button className="modalItem" key={lead.id} onClick={() => setSelectedLead(lead)}>
+        </>}
+        {activeNav === "Leads" && (
+          <section className="bookPage">
+            <div className="panel">
+              <div className="panelHead"><div><span className="eyebrow">CRM</span><h2>All leads</h2></div><span className="count">{leads.length}</span></div>
+              <div className="leadList">
+                {leads.length ? leads.map((lead) => (
+                  <button className={"lead bookPick" + (shownLead?.id === lead.id ? " active" : "")} key={lead.id} onClick={() => setSelectedLead(lead)}>
                     <div className="avatar">{lead.name[0]?.toUpperCase()}</div>
-                    <div><strong>{lead.name}</strong><span>{lead.property_type} · {lead.location}</span><span>{lead.budget} · {lead.timeline}</span></div>
-                    <b>View →</b>
+                    <div className="leadBody">
+                      <div><strong>{lead.name}</strong>{isNewLead(lead) && <b>NEW</b>}</div>
+                      <span>{lead.property_type} · {lead.location}</span>
+                      <span>{lead.budget} · {lead.timeline}</span>
+                    </div>
                   </button>
-                )) : <div className="empty compact"><strong>No leads yet</strong><span>Your voice agent will create them here.</span></div>}</div>
-              ) : (
-                <div className="modalList">{followups.length ? followups.map((followup) => (
-                  <div className="modalItem" key={followup.id}><div className="followIcon">↗</div><div><strong>{followup.note || `Follow up with ${followup.name}`}</strong><span>{followup.name}</span><span>Scheduled: {followup.when}</span></div></div>
-                )) : <div className="empty compact"><strong>No follow-ups yet</strong><span>Ask Picko to schedule one.</span></div>}</div>
-              )}
+                )) : <div className="empty compact"><div className="emptyIcon">◎</div><strong>No leads yet</strong><span>Talk to Picko and a new buyer will show up here.</span></div>}
+              </div>
             </div>
-          </div>
+            <div className="panel">
+              <div className="panelHead"><div><span className="eyebrow">LEAD DETAILS</span><h2>{shownLead ? shownLead.name : "Choose a lead"}</h2></div></div>
+              {shownLead ? (
+                <div className="bookDetailBody">
+                  <div className="detailRow"><span>Property</span><strong>{shownLead.property_type}</strong></div>
+                  <div className="detailRow"><span>Location</span><strong>{shownLead.location}</strong></div>
+                  <div className="detailRow"><span>Budget</span><strong>{shownLead.budget}</strong></div>
+                  <div className="detailRow"><span>Timeline</span><strong>{shownLead.timeline}</strong></div>
+                  {shownLead.notes && <div className="detailNotes"><span>Notes</span><p>{shownLead.notes}</p></div>}
+                </div>
+              ) : <div className="empty bookEmpty"><strong>No lead selected</strong><span>Saved buyers will appear on the left.</span></div>}
+            </div>
+          </section>
+        )}
+        {activeNav === "Follow-ups" && (
+          <section className="bookPage">
+            <div className="panel">
+              <div className="panelHead"><div><span className="eyebrow">NEXT UP</span><h2>All follow-ups</h2></div><span className="count">{followups.length}</span></div>
+              <div className="leadList">
+                {followups.length ? followups.map((followup) => (
+                  <button className={"lead bookPick" + (shownFollowup?.id === followup.id ? " active" : "")} key={followup.id} onClick={() => setSelectedFollowupId(followup.id)}>
+                    <div className="followIcon">↗</div>
+                    <div className="leadBody">
+                      <div><strong>{followup.note || `Follow up with ${followup.name}`}</strong></div>
+                      <span>{followup.name}</span>
+                      <span>{followup.when}</span>
+                    </div>
+                  </button>
+                )) : <div className="empty compact"><strong>No follow-ups yet</strong><span>Ask Picko to schedule one.</span></div>}
+              </div>
+            </div>
+            <div className="panel">
+              <div className="panelHead"><div><span className="eyebrow">FOLLOW-UP</span><h2>{shownFollowup ? shownFollowup.name : "Choose a follow-up"}</h2></div></div>
+              {shownFollowup ? (
+                <div className="bookDetailBody">
+                  <p className="when">{shownFollowup.when}</p>
+                  <p>{shownFollowup.note || `Follow up with ${shownFollowup.name}.`}</p>
+                  {followupLead && (
+                    <>
+                      <div className="detailRow"><span>Property</span><strong>{followupLead.property_type}</strong></div>
+                      <div className="detailRow"><span>Location</span><strong>{followupLead.location}</strong></div>
+                      <div className="detailRow"><span>Budget</span><strong>{followupLead.budget}</strong></div>
+                      <div className="detailRow"><span>Timeline</span><strong>{followupLead.timeline}</strong></div>
+                    </>
+                  )}
+                </div>
+              ) : <div className="empty bookEmpty"><strong>Nothing scheduled</strong><span>Ask Picko to set a follow-up.</span></div>}
+            </div>
+          </section>
         )}
         <footer><span>Agent Picko</span><span>Voice-first CRM</span></footer>
       </main>
