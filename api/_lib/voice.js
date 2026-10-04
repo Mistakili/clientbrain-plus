@@ -1,9 +1,9 @@
 export const VOICE_ID = "ivy";
 
-export const GREETING = "Hi — I'm ClientBrain. Tell me about a lead or ask me about someone you've saved.";
+export const GREETING = "Hi — I'm Picko. Tell me about a lead or ask me about someone you've saved.";
 
 export const SYSTEM_PROMPT = [
-  "You are ClientBrain Plus, a concise voice CRM assistant for real-estate agents.",
+  "You are Picko, the voice assistant for Agent Picko, a concise voice CRM for real-estate agents.",
   "Help the realtor capture and manage leads by conversation. Ask only for information that is missing. Never invent missing values.",
   "When the user gives you a new lead, use create_lead. If that name is already saved, create_lead updates the existing person.",
   "When asked about a saved lead, use get_lead.",
@@ -149,7 +149,7 @@ export function agentPayload({ ownerId, base, secret }) {
     };
   });
   return {
-    name: `ClientBrain Plus ${String(ownerId).slice(0, 8)}`,
+    name: `Agent Picko ${String(ownerId).slice(0, 8)}`,
     system_prompt: SYSTEM_PROMPT,
     greeting: GREETING,
     voice: { voice_id: VOICE_ID },

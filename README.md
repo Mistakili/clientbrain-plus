@@ -1,4 +1,4 @@
-# ClientBrain Plus
+# Agent Picko
 
 **Talk to your CRM.** A voice-first real-estate CRM. Speak a new lead, look someone up, correct their details, or set a follow-up.
 
@@ -42,6 +42,6 @@ Set `ALLOWED_ORIGIN` to the exact origins that may request a token, comma-separa
 
 ## Data
 
-Local runs use a SQLite file at `data/clientbrain-plus.db`. A deployed app needs `DATABASE_URL` pointing at a Postgres database for ClientBrain Plus. That database is not the production Client Brain database, and this repository does not include production Client Brain accounts or credentials.
+Local runs use a SQLite file at `data/clientbrain-plus.db`. A deployed app needs `DATABASE_URL` pointing at a Postgres database for Agent Picko. That database is not the production Client Brain database, and this repository does not include production Client Brain accounts or credentials.
 
 Human handoff records the request. Connecting the call is still a separate step.

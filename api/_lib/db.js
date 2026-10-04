@@ -86,7 +86,7 @@ async function openBackend() {
   if (backend) return backend;
   const databaseUrl = String(process.env.DATABASE_URL_UNPOOLED || process.env.DATABASE_URL || "").trim();
   if (process.env.VERCEL && !databaseUrl) {
-    throw new Error("DATABASE_URL is required on Vercel. Use a database for ClientBrain Plus, separate from production Client Brain.");
+    throw new Error("DATABASE_URL is required on Vercel. Use a database for Agent Picko, separate from production Client Brain.");
   }
   if (databaseUrl) {
     const ssl = /sslmode=require/i.test(databaseUrl) || Boolean(process.env.VERCEL);

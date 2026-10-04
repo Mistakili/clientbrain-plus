@@ -365,13 +365,15 @@ function App() {
 
   const navItems = [["Home", "⌂"], ["Leads", "◎"], ["Follow-ups", "◌"]];
   const voiceLabel = connected
-    ? status === "Speaking" ? "ClientBrain is speaking…" : status === "Thinking" ? "Thinking…" : "Listening…"
+    ? status === "Speaking" ? "Picko is speaking…" : status === "Thinking" ? "Thinking…" : "Picko is listening"
     : "Ready";
+  const mark = <div className="logo"><img src="/picko-mark.jpg" alt="" /></div>;
 
   if (showAuth) {
     return (
       <div className="authScreen">
         <form className="authCard" onSubmit={submitAuth}>
+          <div className="authBrand brand">{mark}<div><strong>Agent <em>Picko</em></strong><small>Voice-first CRM</small></div></div>
           <span className="eyebrow">{authMode === "signup" ? "CREATE ACCOUNT" : "SIGN IN"}</span>
           <h2>{authMode === "signup" ? "Open your book." : "Welcome back."}</h2>
           <p>Leads, follow-ups, and handoffs stay with this account.</p>
@@ -395,7 +397,7 @@ function App() {
     return (
       <div className="landing">
         <div className="landingNav">
-          <div className="brand"><div className="logo">CB</div><div><strong>ClientBrain <em>Plus</em></strong><small>Voice-first CRM</small></div></div>
+          <div className="brand">{mark}<div><strong>Agent <em>Picko</em></strong><small>Voice-first CRM</small></div></div>
           <span className="navMark">Voice CRM</span>
         </div>
         <section className="hero">
@@ -407,16 +409,16 @@ function App() {
             <div className="heroMeta"><span>● Live voice</span><span>→</span><span>Saved leads</span><span>→</span><span>Follow-ups</span></div>
           </div>
           <div className="heroVisual">
-            <div className="miniOrb"><div className="miniRing r1" /><div className="miniRing r2" /><div className="miniCore">⌁</div></div>
-            <div className="voiceCardMini"><span className="liveDot" /> ClientBrain is listening<span className="miniBars">▂▅▇▅▂</span></div>
+            <img className="heroMascot" src="/picko.jpg" alt="Picko, the Agent Picko mascot" />
+            <div className="voiceCardMini"><span className="liveDot" /> Picko is listening<span className="miniBars">▂▅▇▅▂</span></div>
           </div>
         </section>
         <section className="featureStrip">
-          <article><span>01</span><strong>Capture leads</strong><p>Tell ClientBrain about a new buyer and it creates the lead for you.</p></article>
+          <article><span>01</span><strong>Capture leads</strong><p>Tell Picko about a new buyer and it creates the lead for you.</p></article>
           <article><span>02</span><strong>Manage clients</strong><p>Ask about saved leads or update their details through conversation.</p></article>
-          <article><span>03</span><strong>Never miss a follow-up</strong><p>Say when you want to follow up and ClientBrain schedules it.</p></article>
+          <article><span>03</span><strong>Never miss a follow-up</strong><p>Say when you want to follow up and Picko schedules it.</p></article>
         </section>
-        <footer><span>ClientBrain Plus</span><span>Voice-first CRM</span></footer>
+        <footer><span>Agent Picko</span><span>Voice-first CRM</span></footer>
       </div>
     );
   }
@@ -426,7 +428,7 @@ function App() {
   return (
     <div className="shell">
       <aside className="sidebar">
-        <div className="brand"><div className="logo">CB</div><div><strong>ClientBrain <em>Plus</em></strong><small>Voice-first CRM</small></div></div>
+        <div className="brand">{mark}<div><strong>Agent <em>Picko</em></strong><small>Voice-first CRM</small></div></div>
         <nav>
           {navItems.map(([name, icon]) => (
             <button key={name} className={activeNav === name ? "active" : ""} onClick={() => setActiveNav(name)}>
@@ -436,13 +438,13 @@ function App() {
             </button>
           ))}
         </nav>
-        <div className="agentCard"><span className="liveDot" /><div><strong>Voice Agent</strong><small>{connected ? "Live" : "Ready"}</small></div><small>Browser voice</small></div>
+        <div className="agentCard"><span className="liveDot" /><div><strong>Picko</strong><small>{connected ? "Live" : "Ready"}</small></div><small>Browser voice</small></div>
         <div className="userCard"><div className="userAvatar">{user?.name?.[0]?.toUpperCase() || "A"}</div><div><strong>{user?.name}</strong><small>{user?.email}</small></div></div>
         <button className="signOut" onClick={signOut}>Sign out</button>
       </aside>
       <main className="workspace">
         <header className="topbar">
-          <div className="mobileBrand"><div className="logo">CB</div><strong>ClientBrain <em>Plus</em></strong></div>
+          <div className="mobileBrand">{mark}<strong>Agent <em>Picko</em></strong></div>
           <div className="pageTitle"><span className="eyebrow">VOICE WORKSPACE</span><h1>{activeNav}</h1></div>
           <div className="topActions">
             <button className="topSignOut" onClick={signOut}>Sign out</button>
@@ -456,7 +458,7 @@ function App() {
             <button className={"voiceButton " + (connected ? "connected" : "")} onClick={connected ? disconnect : connect} aria-label={connected ? "End voice session" : "Start voice session"}><div className="mic">⌁</div></button>
             <div className={"wave right " + (connected ? "live" : "")}>{[1, 2, 3, 4, 5, 6, 7].map((i) => <span key={i} style={connected ? { transform: `scaleY(${Math.max(.35, .55 + micLevel * (i % 2 === 0 ? 1.5 : .9))})` } : undefined} />)}</div>
           </div>
-          <div className="voiceState"><strong>{toolStatus || voiceLabel}</strong><span>{toolStatus ? "ClientBrain is updating your book" : connected ? "Speak naturally — I'm listening" : "Tap the microphone to start"}</span></div>
+          <div className="voiceState"><strong>{toolStatus || voiceLabel}</strong><span>{toolStatus ? "Picko is updating your book" : connected ? "Speak naturally — I'm listening" : "Tap the microphone to start"}</span></div>
           <div className="suggestions">
             <button onClick={connect}>“I have a new lead…”</button>
             <button onClick={connect}>“Show my leads…”</button>
@@ -470,8 +472,8 @@ function App() {
             <div className="messages">
               {messages.length ? messages.map((item) => (
                 <div key={item.id} className={"msg " + item.role + (item.partial ? " partial" : "")}>
-                  <div className="msgIcon">{item.role === "user" ? (user?.name?.[0]?.toUpperCase() || "Y") : "CB"}</div>
-                  <div className="msgBody"><div className="msgMeta"><b>{item.role === "user" ? "You" : "ClientBrain"}</b><span>now</span></div><p>{item.text}</p></div>
+                  <div className="msgIcon">{item.role === "user" ? (user?.name?.[0]?.toUpperCase() || "Y") : <img src="/picko-mark.jpg" alt="" />}</div>
+                  <div className="msgBody"><div className="msgMeta"><b>{item.role === "user" ? "You" : "Picko"}</b><span>now</span></div><p>{item.text}</p></div>
                 </div>
               )) : <div className="empty"><div className="emptyIcon">⌁</div><strong>Your conversation will appear here</strong><span>Start the voice agent and talk naturally.</span></div>}
             </div>
@@ -502,7 +504,7 @@ function App() {
             </div>
             <div className="panel followPanel">
               <div className="panelHead"><div><span className="eyebrow">NEXT UP</span><h2>Recent follow-ups</h2></div><button className="viewAll" onClick={() => { setSelectedLead(null); setShowAllLeads(false); setShowAllFollowups(true); }}>View all →</button></div>
-              <div className="followList">{followups.length ? followups.slice(0, 3).map((followup) => <div className="followItem" key={followup.id}><div className="followIcon">↗</div><div><strong>{followup.note || `Follow up with ${followup.name}`}</strong><span>{followup.name} · {followup.when}</span></div></div>) : <div className="empty compact"><strong>No follow-ups yet</strong><span>Ask ClientBrain to schedule one.</span></div>}</div>
+              <div className="followList">{followups.length ? followups.slice(0, 3).map((followup) => <div className="followItem" key={followup.id}><div className="followIcon">↗</div><div><strong>{followup.note || `Follow up with ${followup.name}`}</strong><span>{followup.name} · {followup.when}</span></div></div>) : <div className="empty compact"><strong>No follow-ups yet</strong><span>Ask Picko to schedule one.</span></div>}</div>
             </div>
           </div>
         </section>
@@ -532,12 +534,12 @@ function App() {
               ) : (
                 <div className="modalList">{followups.length ? followups.map((followup) => (
                   <div className="modalItem" key={followup.id}><div className="followIcon">↗</div><div><strong>{followup.note || `Follow up with ${followup.name}`}</strong><span>{followup.name}</span><span>Scheduled: {followup.when}</span></div></div>
-                )) : <div className="empty compact"><strong>No follow-ups yet</strong><span>Ask ClientBrain to schedule one.</span></div>}</div>
+                )) : <div className="empty compact"><strong>No follow-ups yet</strong><span>Ask Picko to schedule one.</span></div>}</div>
               )}
             </div>
           </div>
         )}
-        <footer><span>ClientBrain Plus</span><span>Voice-first CRM</span></footer>
+        <footer><span>Agent Picko</span><span>Voice-first CRM</span></footer>
       </main>
     </div>
   );

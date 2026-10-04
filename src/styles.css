@@ -10,6 +10,15 @@
 @media(min-width:951px){.topSignOut{display:none}}
 .userCard div{min-width:0}
 .userCard strong,.userCard small{max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.logo{padding:0;overflow:hidden;background:#101218}
+.logo img{width:100%;height:100%;object-fit:cover;display:block}
+.landing .logo{background:#101218}
+.heroVisual{height:auto;min-height:430px}
+.heroMascot{width:min(420px,100%);max-height:480px;object-fit:cover;object-position:center top;border-radius:32px;display:block;margin:0 auto;box-shadow:0 30px 80px #000a}
+.voiceCardMini{z-index:1}
+.msgIcon img{width:100%;height:100%;object-fit:cover;border-radius:inherit;display:block}
+.authBrand{margin-bottom:18px}
+@media(max-width:760px){.heroVisual{height:auto;min-height:0}.heroMascot{max-height:320px;border-radius:24px}}
 .authScreen{min-height:100vh;display:grid;place-items:center;padding:24px;background:radial-gradient(circle at 70% 20%,#171c2d 0,#08090e 55%)}
 .authCard{width:min(420px,100%);background:#0d0f15;border:1px solid #20232e;border-radius:18px;padding:28px 24px}
 .authCard h2{margin:8px 0 6px;font-size:32px;letter-spacing:-.045em}
