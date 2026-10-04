@@ -66,7 +66,14 @@ function App() {
   const intentionalClose = useRef(false);
   const readyTimer = useRef(null);
 
-  useEffect(() => () => disconnect(), []);
+  useEffect(() => {
+    const end = () => disconnect({ immediate: true });
+    window.addEventListener("pagehide", end);
+    return () => {
+      window.removeEventListener("pagehide", end);
+      end();
+    };
+  }, []);
 
   useEffect(() => {
     let alive = true;
@@ -164,18 +171,34 @@ function App() {
     }
   }
 
-  function disconnect({ resetStatus = true } = {}) {
+  function finishSocket(socket, { immediate = false } = {}) {
+    if (!socket) return;
+    if (socket.readyState === WebSocket.OPEN) {
+      try { socket.send(JSON.stringify({ type: "session.end" })); } catch {}
+      if (immediate) {
+        try { socket.close(); } catch {}
+        return;
+      }
+      setTimeout(() => { try { socket.close(); } catch {} }, 150);
+      return;
+    }
+    try { socket.close(); } catch {}
+  }
+
+  function disconnect({ resetStatus = true, immediate = false } = {}) {
     intentionalClose.current = true;
     clearTimeout(readyTimer.current);
     setMicLevel(0);
-    try { ws.current?.close(); } catch {}
+    const socket = ws.current;
     try { stream.current?.getTracks().forEach((track) => track.stop()); } catch {}
+    try { if (worklet.current) worklet.current.port.onmessage = null; } catch {}
     try { worklet.current?.disconnect(); } catch {}
     try { ctx.current?.close(); } catch {}
     ws.current = null;
     session.current = null;
     setConnected(false);
     if (resetStatus) setStatus("Ready");
+    finishSocket(socket, { immediate });
   }
 
   async function connect() {
@@ -221,7 +244,7 @@ function App() {
         readyTimer.current = setTimeout(() => {
           if (!session.current && socket.readyState === 1) {
             setStatus("Voice session did not become ready");
-            try { socket.close(); } catch {}
+            disconnect({ resetStatus: false });
           }
         }, 10000);
       };
