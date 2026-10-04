@@ -197,17 +197,17 @@ function App(){
   : "Ready";
 
  if(!showWorkspace)return <div className="landing">
-  <div className="landingNav"><div className="brand"><div className="logo">CB</div><div><strong>ClientBrain <em>Plus</em></strong><small>Voice-first CRM</small></div></div><span className="hackBadge">ASSEMBLYAI VOICE AGENT</span></div>
-  <section className="hero"><div className="heroCopy"><span className="eyebrow">VOICE-FIRST CRM FOR REAL-ESTATE AGENTS</span><h1>Your CRM<br/><em>should listen.</em></h1><p>Capture leads, look up clients, and schedule follow-ups — naturally, just by talking.</p><button className="heroButton" onClick={()=>setShowWorkspace(true)}>Try the live demo <span>→</span></button><div className="heroMeta"><span>● Live voice</span><span>→</span><span>AI tool calls</span><span>→</span><span>CRM actions</span></div></div><div className="heroVisual"><div className="miniOrb"><div className="miniRing r1"/><div className="miniRing r2"/><div className="miniCore">⌁</div></div><div className="voiceCardMini"><span className="liveDot"/> ClientBrain is listening<span className="miniBars">▂▅▇▅▂</span></div></div></section>
+  <div className="landingNav"><div className="brand"><div className="logo">CB</div><div><strong>ClientBrain <em>Plus</em></strong><small>Voice-first CRM</small></div></div><span className="navMark">Voice CRM</span></div>
+  <section className="hero"><div className="heroCopy"><span className="eyebrow">VOICE-FIRST CRM FOR REAL-ESTATE AGENTS</span><h1>Your CRM<br/><em>should listen.</em></h1><p>Capture leads, look up clients, and schedule follow-ups — naturally, just by talking.</p><button className="heroButton" onClick={()=>setShowWorkspace(true)}>Open the workspace <span>→</span></button><div className="heroMeta"><span>● Live voice</span><span>→</span><span>Saved leads</span><span>→</span><span>Follow-ups</span></div></div><div className="heroVisual"><div className="miniOrb"><div className="miniRing r1"/><div className="miniRing r2"/><div className="miniCore">⌁</div></div><div className="voiceCardMini"><span className="liveDot"/> ClientBrain is listening<span className="miniBars">▂▅▇▅▂</span></div></div></section>
   <section className="featureStrip"><article><span>01</span><strong>Capture leads</strong><p>Tell ClientBrain about a new buyer and it creates the lead for you.</p></article><article><span>02</span><strong>Manage clients</strong><p>Ask about saved leads or update their details through conversation.</p></article><article><span>03</span><strong>Never miss a follow-up</strong><p>Say when you want to follow up and ClientBrain schedules it.</p></article></section>
-  <footer><span>ClientBrain Plus · Hackathon prototype</span><span>Built with AssemblyAI Voice Agent</span></footer>
+  <footer><span>ClientBrain Plus</span><span>Voice-first CRM</span></footer>
  </div>
 
  return <div className="shell">
   <aside className="sidebar">
    <div className="brand"><div className="logo">CB</div><div><strong>ClientBrain <em>Plus</em></strong><small>Voice-first CRM</small></div></div>
    <nav>{navItems.map(([name,icon])=><button key={name} className={activeNav===name?"active":""} onClick={()=>setActiveNav(name)}><i>{icon}</i><span>{name}</span>{name==="Leads"&&leads.length>0&&<b>{leads.length}</b>}{name==="Follow-ups"&&followups.length>0&&<b>{followups.length}</b>}</button>)}</nav>
-   <div className="agentCard"><span className="liveDot"/><div><strong>Voice Agent</strong><small>{connected?"Live":"Ready"}</small></div><small>Powered by AssemblyAI</small></div>
+   <div className="agentCard"><span className="liveDot"/><div><strong>Voice Agent</strong><small>{connected?"Live":"Ready"}</small></div><small>Browser voice</small></div>
    <div className="userCard"><div className="userAvatar">A</div><div><strong>Akin Ajobo</strong><small>Free Plan</small></div></div>
   </aside>
 
@@ -226,7 +226,7 @@ function App(){
      <div className={"wave right "+(connected?"live":"")}>{[1,2,3,4,5,6,7].map(i=><span key={i} style={connected?{transform:`scaleY(${Math.max(.35,.55+micLevel*(i%2===0?1.5:.9))})`}:undefined}/>)}</div>
     </div>
     <div className="voiceState"><strong>{toolStatus||voiceLabel}</strong><span>{toolStatus?"ClientBrain is updating the CRM in real time":connected?"Speak naturally — I'm listening":"Tap the microphone to start"}</span></div>
-    <div className="suggestions"><button onClick={()=>connect()}>“I have a new lead…”</button><button onClick={()=>connect()}>“Show my leads…”</button><button onClick={()=>connect()}>“Create a follow-up…”</button></div><div className="demoHint"><span>●</span> Live voice → AI tool call → CRM update</div>
+    <div className="suggestions"><button onClick={()=>connect()}>“I have a new lead…”</button><button onClick={()=>connect()}>“Show my leads…”</button><button onClick={()=>connect()}>“Create a follow-up…”</button></div><div className="voiceHint"><span>●</span> Use headphones so the microphone stays clear.</div>
    </section>
 
    <section className="contentGrid">
@@ -276,7 +276,7 @@ function App(){
     </div>
    </div>}
 
-   <footer><span>ClientBrain Plus · Hackathon prototype</span><span>Voice-first CRM · AssemblyAI</span></footer>
+   <footer><span>ClientBrain Plus</span><span>Voice-first CRM</span></footer>
   </main>
  </div>
 }
